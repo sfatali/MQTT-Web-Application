@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+        'http://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+
+<mapper namespace="rtsd.vinavigation.dao.MessageDAO">
+
+    <select id="count" parameterType="java.lang.String" resultType="int">
+        select count(*) from messages where message_id = #{messageId};
+    </select>
+
+    <insert id="insert" parameterType="rtsd.vinavigation.model.Message">
+        INSERT INTO messages(message_id, device_id, command, frequency, duration, message_text,
+        publish_date, status)
+        VALUES(#{messageId}, #{deviceId}, #{command}, #{frequency}, #{duration}, #{messageText},
+         #{publishDate}, #{status});
+    </insert>
+
+    <update id="updateMessageStatus" parameterType="rtsd.vinavigation.model.MessageStatus">
+        UPDATE messages SET status = #{status}, status_date = #{statusDate}
+        WHERE message_id = #{messageId};
+    </update>
+
+    <insert id="insertFaultyMessageLog" parameterType="java.lang.String">
+        INSERT INTO faulty_message_logs(message) VALUES(#{message});
+    </insert>
+
+    <select id="getNavigationParams" parameterType="java.lang.String" resultMap="NavigationMap">
+        select device_id, command, frequency, duration from messages where message_id = #{messageId}
+    </select>
+
+    <resultMap id="NavigationMap" type="rtsd.vinavigation.model.Navigation">
+        <result property="deviceId" column="device_id"/>
+        <result property="type" column="command"/>
+        <result property="frequency" column="frequency"/>
+        <result property="duration" column="duration"/>
+    </resultMap>
+
+</mapper>

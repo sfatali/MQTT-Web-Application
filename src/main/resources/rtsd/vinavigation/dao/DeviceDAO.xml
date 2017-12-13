@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+        'http://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+
+<mapper namespace="rtsd.vinavigation.dao.DeviceDAO">
+
+    <select id="getDashboardData" resultMap="DeviceDTOMap">
+        select d.id, d.device_id,
+               n.type,
+               CASE
+                 WHEN (n.type = 1) THEN 'Left'
+                 WHEN (n.type = 2) THEN 'Right'
+                 WHEN (n.type = 3) THEN 'Stop'
+                 WHEN (n.type = 4) THEN 'Morse code'
+               END as direction,
+               n.frequency, n.duration,
+               (select count(m.*) from messages m where m.device_id = d.device_id and m.status = 5) as messages_queued,
+               CASE
+                 WHEN (l.status is null) then 'Never connected'
+                 WHEN (l.status = 1) then 'Connected'
+                 WHEN (l.status = 0) then 'Disconnected'
+               END as status,
+               coalesce(to_char(l.status_date, 'dd.MM.yyyy HH24:mi'), '-') as status_date,
+               m.message_id
+        from devices d
+        join device_navigation_params n on n.device_id = d.device_id
+        left join connection_logs l on l.device_id = d.device_id and l.status_date = (select max(l2.status_date) from connection_logs l2 where l2.device_id = d.device_id)
+        left join messages m on m.device_id = d.device_id and m.status = 5
+        order by d.id, n.type;
+    </select>
+
+    <insert id="insertDeviceStatus" parameterType="rtsd.vinavigation.model.DeviceStatus">
+        INSERT INTO connection_logs(device_id, status, status_date)
+        VALUES(#{deviceId}, #{status}, #{statusDate});
+    </insert>
+
+    <resultMap id="DeviceDTOMap" type="rtsd.vinavigation.dto.DeviceDTO">
+        <result property="id" column="id"/>
+        <result property="deviceId" column="device_id"/>
+        <result property="status" column="status"/>
+        <result property="statusDate" column="status_date"/>
+        <result property="messagesInQueueCount" column="messages_queued"/>
+        <association property="navigationParams" resultMap="NavigationDTOMap"/>
+        <association property="pendingMessagesList" resultMap="MessageDTOMap"/>
+    </resultMap>
+
+    <resultMap id="NavigationDTOMap" type="rtsd.vinavigation.dto.NavigationDTO">
+        <result property="type" column="type"/>
+        <result property="direction" column="direction"/>
+        <result property="frequency" column="frequency"/>
+        <result property="duration" column="duration"/>
+    </resultMap>
+
+    <resultMap id="MessageDTOMap" type="rtsd.vinavigation.dto.MessageDTO">
+        <result property="messageId" column="message_id"/>
+    </resultMap>
+
+</mapper>
