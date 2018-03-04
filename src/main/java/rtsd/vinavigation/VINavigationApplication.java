@@ -20,7 +20,6 @@ import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.util.Arrays;
 
-//@Configuration
 @SpringBootApplication
 @EnableAutoConfiguration(exclude={DataSourceAutoConfiguration.class})
 @MapperScan(value = {"rtsd.vinavigation.dao"}, sqlSessionFactoryRef = "org.mybatis.spring.SqlSessionFactoryBean")
@@ -44,39 +43,21 @@ public class VINavigationApplication {
 	public SqlSessionFactoryBean getSqlSessionFactoryBean() {
 		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
 		sqlSessionFactoryBean.setDataSource(dataSource());
-		// some stuff happens here
 		return sqlSessionFactoryBean;
 	}
 
 	@Autowired
-	MqttHandler mqttHandler;
+	private MqttHandler mqttHandler;
 
 	public static void main(String[] args) {
 		SpringApplication.run(VINavigationApplication.class, args);
 	}
 
 	public VINavigationApplication() {
-		System.out.println("\nAPP INIT!\n");
 	}
 
 	@PostConstruct
 	public void init() {
-		System.out.println("Calling after all beans ready");
 		mqttHandler.run();
 	}
-
-	/*@Bean
-	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
-		return args -> {
-
-			System.out.println("Let's inspect the beans provided by Spring Boot:");
-
-			String[] beanNames = ctx.getBeanDefinitionNames();
-			Arrays.sort(beanNames);
-			for (String beanName : beanNames) {
-				System.out.println(beanName);
-			}
-
-		};
-	}*/
 }

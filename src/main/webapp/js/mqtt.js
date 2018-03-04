@@ -89,7 +89,7 @@ function publishMessage(deviceId, messagePayload, topic) {
     console.log("payload: "+messagePayload);
     client.send(message);
 
-    if(topic == message) {
+    if(topic == 'message') {
         $.notify("Message sent", "success");
     }
 }

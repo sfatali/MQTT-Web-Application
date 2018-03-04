@@ -115,32 +115,20 @@ public class MessageValidator {
         }
 
         if(!isValidIntField(jsonObject, "mode")) {
-            return false; // if there is no mode specified, then this an erroneous case
+            return false;
         }
 
         if (!isValidIntField(jsonObject, "frequency")) {
-            return false; // if Arduino does not send the valid info - that's a problem
+            return false;
         }
 
         if (!isValidIntField(jsonObject, "pulseDuration")) {
-            return false; // if Arduino does not send the valid info - that's a problem
+            return false;
         }
 
         messageStatus.setStatusDate(new Date());
         return true;
     }
-
-    // no need for that anymore:
-    /*void getNavigationFromStatusUpdate(Navigation navigation, JSONObject jsonObject) {
-        if (jsonObject.getInt("mode") == 1 || jsonObject.getInt("mode") == 2 || jsonObject.getInt("mode") == 3) {
-            navigation.setType(jsonObject.getInt("mode"));
-            navigation.setFrequency(jsonObject.getInt("frequency"));
-            navigation.setDuration(jsonObject.getInt("pulseDuration"));
-        } else {
-            navigation.setType(-1); // this was morse code message
-        }
-        navigation.setDeviceId(jsonObject.getString("deviceId"));
-    }*/
 
     private boolean isValidStringField(JSONObject jsonObject, String field) {
         return jsonObject.has(field) && !jsonObject.optString(field, "null").equals("null");

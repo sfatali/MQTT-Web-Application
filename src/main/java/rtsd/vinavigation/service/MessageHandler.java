@@ -30,7 +30,6 @@ public class MessageHandler {
     private MessageValidator messageValidator;
 
     public MessageHandler() {
-
     }
 
     void handleMessage(String topicDeviceId, String messageString) {
@@ -41,14 +40,14 @@ public class MessageHandler {
                 return;
             }
         } catch (Exception ex) {
+            handleInvalidTopic("Message JSON parsing problem: " + topicDeviceId, messageString);
             return;
         }
 
-        // saving message - frequency/duration change ("navigation") or Morse code vibration
+        // saving message - frequency/duration command ("navigation") or Morse code vibration
         Message message = new Message();
-        JSONObject jsonObject = new JSONObject(messageString);
 
-        boolean valid = messageValidator.validateMessage(message, jsonObject);
+        boolean valid = messageValidator.validateMessage(message, new JSONObject(messageString));
         if (valid) {
             // now let's check if message is really new:
             if(messageDAO.count(message.getMessageId()) == 0) {
@@ -71,6 +70,7 @@ public class MessageHandler {
                 return;
             }
         } catch (Exception ex) {
+            handleInvalidTopic("Device status JSON parsing problem: " + topicDeviceId, messageString);
             return;
         }
 
@@ -94,6 +94,7 @@ public class MessageHandler {
             }
         }
         catch (Exception ex) {
+            handleInvalidTopic("Message status JSON parsing problem: " + topicDeviceId, messageString);
             return;
         }
 
@@ -102,29 +103,6 @@ public class MessageHandler {
         boolean valid = messageValidator.validateMessageStatus(messageStatus, new JSONObject(messageString));
         if (valid) {
             messageDAO.updateMessageStatus(messageStatus);
-            // this no longer makes any sense:
-            /*if(messageStatus.getStatus() == 3) { // if message came with "success" status
-                // let's see if it is the navigation message
-                Navigation navigation = new Navigation();
-                messageValidator.getNavigationFromStatusUpdate(navigation, new JSONObject(messageString));
-                if (navigation.getType() != -1) {
-                    // Let's get message's navigation params from database and check some stuff
-                    // if params are not the same - then this is considered an error
-                    Navigation navigationParamsFromDB = messageDAO.getNavigationParams(messageStatus.getMessageId());
-
-                    if(navigationParamsFromDB != null &&
-                            navigation.getDeviceId().equals(navigationParamsFromDB.getDeviceId()) &&
-                            navigation.getType() == navigationParamsFromDB.getType() &&
-                            navigation.getFrequency() == navigationParamsFromDB.getFrequency() &&
-                            navigation.getDuration() == navigationParamsFromDB.getDuration()) {
-                        // then everything is valid
-                        navigationDAO.update(navigation);
-                    } else {
-                        // invalid case from Arduino
-                        messageDAO.insertFaultyMessageLog("Invalid navigation params: "+messageString);
-                    }
-                }
-            }*/
         } else {
             // invalid json was sent
             messageDAO.insertFaultyMessageLog("Invalid message status: "+messageString);
@@ -139,6 +117,7 @@ public class MessageHandler {
                 return;
             }
         } catch (Exception ex) {
+            handleInvalidTopic("Navigation edit JSON parsing problem: " + topicDeviceId, messageString);
             return;
         }
 
